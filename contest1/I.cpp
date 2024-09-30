@@ -14,7 +14,7 @@ static const int NO_PREV = -1;
 
 static const ll MAX_NUM = 2000;
 
-std::vector<ll> find_hoods(const std::vector<ll> gangsters);
+std::vector<ll> find_hoods(const std::vector<ll>& gangsters);
 void fill_dynamic_arrays(const std::vector<ll>& gangsters,
                          std::vector<ll>& greater, std::vector<ll>& less,
                          std::vector<ll>& greater_prev,
@@ -44,7 +44,7 @@ int main() {
   print_data(hoods);
 }
 
-std::vector<ll> find_hoods(const std::vector<ll> gangsters) {
+std::vector<ll> find_hoods(const std::vector<ll>& gangsters) {
   size_t N = gangsters.size();
 
   std::vector<ll> greater(N, 1);  // longest zig-zag sequence with i elements
