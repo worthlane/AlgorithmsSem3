@@ -10,6 +10,8 @@ static const ll MODULE = 1000003;
 static const ll INF = 9223372036854775800;
 static const size_t UNKNOWN_SIZE = -1;
 
+static const int NO_PREV = -1;
+
 static const ll MAX_NUM = 2000;
 
 std::vector<ll> find_hoods(const std::vector<ll> gangsters);
@@ -18,6 +20,16 @@ void fill_dynamic_arrays(const std::vector<ll>& gangsters,
                          std::vector<ll>& greater_prev,
                          std::vector<ll>& less_prev);
 
+void read_data(std::vector<ll>& gangsters);
+void print_data(const std::vector<ll>& hoods);
+
+std::vector<ll> recover_answer(const std::vector<ll>& gangsters,
+                    std::vector<ll>& greater_prev, std::vector<ll>& less_prev,
+                    const size_t max_len, bool is_greater_zigzag, size_t last_elem);
+
+void find_longest_sequence(std::vector<ll>& greater, std::vector<ll>& less, const size_t N,
+                           size_t& max_len, bool& is_greater_zigzag, size_t& last_elem);
+
 int main() {
   size_t N = 0;
 
@@ -25,20 +37,11 @@ int main() {
 
   std::vector<ll> gangsters(N, 0);
 
-  for (size_t i = 0; i < N; i++) {
-    std::cin >> gangsters[i];
-  }
+  read_data(gangsters);
 
   std::vector<ll> hoods = find_hoods(gangsters);
 
-  size_t size = hoods.size();
-
-  std::cout << size << std::endl;
-
-  for (size_t i = 0; i < size; i++) {
-    std::cout << hoods[i] << " ";
-  }
-  std::cout << std::endl;
+  print_data(hoods);
 }
 
 std::vector<ll> find_hoods(const std::vector<ll> gangsters) {
@@ -49,8 +52,6 @@ std::vector<ll> find_hoods(const std::vector<ll> gangsters) {
   std::vector<ll> less(N, 1);  // longest zig-zag sequence with i elements where
                                // last element is less than previous
 
-  static const int NO_PREV = -1;
-
   std::vector<ll> greater_prev(N, NO_PREV);
   std::vector<ll> less_prev(N, NO_PREV);
 
@@ -59,31 +60,11 @@ std::vector<ll> find_hoods(const std::vector<ll> gangsters) {
   size_t max_len = 0;
   bool is_greater_zigzag = false;
   size_t last_elem = NO_PREV;
-  for (size_t i = 0; i < N; i++) {
-    if (greater[i] > max_len) {
-      last_elem = i;
-      max_len = greater[i];
-      is_greater_zigzag = true;
-    } else if (less[i] > max_len) {
-      last_elem = i;
-      max_len = less[i];
-      is_greater_zigzag = false;
-    }
-  }
 
-  std::vector<ll> hoods(max_len, 0);
+  find_longest_sequence(greater, less, N, max_len, is_greater_zigzag, last_elem);
 
-  for (int i = max_len - 1; i >= 0; i--) {
-    hoods[i] = gangsters[last_elem];
-
-    if (is_greater_zigzag) {
-      last_elem = greater_prev[last_elem];
-      is_greater_zigzag = false;
-    } else {
-      last_elem = less_prev[last_elem];
-      is_greater_zigzag = true;
-    }
-  }
+  std::vector<ll> hoods = recover_answer(gangsters, greater_prev, less_prev,
+                                         max_len, is_greater_zigzag, last_elem);
 
   return hoods;
 }
@@ -103,6 +84,62 @@ void fill_dynamic_arrays(const std::vector<ll>& gangsters,
         less[i] = std::max(less[i], greater[j] + 1);
         less_prev[i] = j;
       }
+    }
+  }
+}
+
+void read_data(std::vector<ll>& gangsters) {
+  size_t N = gangsters.size();
+  for (size_t i = 0; i < N; i++) {
+    std::cin >> gangsters[i];
+  }
+}
+
+void print_data(const std::vector<ll>& hoods)
+{
+  size_t size = hoods.size();
+
+  std::cout << size << std::endl;
+
+  for (size_t i = 0; i < size; i++) {
+    std::cout << hoods[i] << " ";
+  }
+  std::cout << std::endl;
+}
+
+std::vector<ll> recover_answer(const std::vector<ll>& gangsters,
+                    std::vector<ll>& greater_prev, std::vector<ll>& less_prev,
+                    const size_t max_len, bool is_greater_zigzag, size_t last_elem)
+{
+  std::vector<ll> hoods(max_len, 0);
+
+  for (int i = max_len - 1; i >= 0; i--) {
+    hoods[i] = gangsters[last_elem];
+
+    if (is_greater_zigzag) {
+      last_elem = greater_prev[last_elem];
+      is_greater_zigzag = false;
+    } else {
+      last_elem = less_prev[last_elem];
+      is_greater_zigzag = true;
+    }
+  }
+
+  return hoods;
+}
+
+void find_longest_sequence(std::vector<ll>& greater, std::vector<ll>& less, const size_t N,
+                           size_t& max_len, bool& is_greater_zigzag, size_t& last_elem)
+{
+  for (size_t i = 0; i < N; i++) {
+    if (greater[i] > max_len) {
+      last_elem = i;
+      max_len = greater[i];
+      is_greater_zigzag = true;
+    } else if (less[i] > max_len) {
+      last_elem = i;
+      max_len = less[i];
+      is_greater_zigzag = false;
     }
   }
 }
