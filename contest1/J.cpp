@@ -20,9 +20,15 @@ void print_vector(std::vector<size_t>& vec);
 
 std::vector<std::vector<Elements>> lcs_table(
     std::string& sequence1, std::string& sequence2);
-std::pair<std::vector<size_t>, std::vector<size_t>> get_lcs(
-    std::vector<std::vector<Elements>>& prev,
-    std::string& sequence1, std::string& sequence2);
+
+struct LCSIndexes
+{
+  std::vector<size_t> first_indexes;
+  std::vector<size_t> second_indexes;
+};
+
+LCSIndexes get_lcs(std::vector<std::vector<Elements>>& prev,
+                   const std::string& sequence1, const std::string& sequence2);
 
 int main() {
   std::string sequence1;
@@ -32,12 +38,12 @@ int main() {
   std::cin >> sequence2;
 
   std::vector<std::vector<Elements>> prev = lcs_table(sequence1, sequence2);
-  std::pair<std::vector<size_t>, std::vector<size_t>> lcs = get_lcs(prev, sequence1, sequence2);
+  LCSIndexes lcs_indexes = get_lcs(prev, sequence1, sequence2);
 
-  std::cout << lcs.first.size() << std::endl;
+  std::cout << lcs_indexes.first_indexes.size() << std::endl;
 
-  print_vector(lcs.first);
-  print_vector(lcs.second);
+  print_vector(lcs_indexes.first_indexes);
+  print_vector(lcs_indexes.second_indexes);
 
   return 0;
 }
@@ -82,9 +88,9 @@ void print_vector(std::vector<size_t>& vec)
   std::cout << std::endl;
 }
 
-std::pair<std::vector<size_t>, std::vector<size_t>> get_lcs(
+LCSIndexes get_lcs(
     std::vector<std::vector<Elements>>& prev,
-    std::string& sequence1, std::string& sequence2) {
+    const std::string& sequence1, const std::string& sequence2) {
   std::vector<size_t> lcs1;
   std::vector<size_t> lcs2;
 
@@ -93,10 +99,8 @@ std::pair<std::vector<size_t>, std::vector<size_t>> get_lcs(
 
   while (i != 0 && j != 0) {
     if (prev[i][j].i == i - 1 && prev[i][j].j == j - 1) {
-      lcs1.push_back(i);
-      lcs2.push_back(j);
-      i--;
-      j--;
+      lcs1.push_back(i--);
+      lcs2.push_back(j--);
     } else if (prev[i][j].i == i - 1 && prev[i][j].j == j)
       i--;
     else
@@ -106,5 +110,5 @@ std::pair<std::vector<size_t>, std::vector<size_t>> get_lcs(
   std::reverse(lcs1.begin(), lcs1.end());
   std::reverse(lcs2.begin(), lcs2.end());
 
-  return std::pair<std::vector<size_t>, std::vector<size_t>>(lcs1, lcs2);
+  return {lcs1, lcs2};
 }
