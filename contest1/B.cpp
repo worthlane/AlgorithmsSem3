@@ -53,7 +53,7 @@ int main() {
   ans = (step ^ n) * ans;
 
   std::cout << ans[4][0] % MODULE << std::endl;
-  
+
   return 0;
 }
 
@@ -83,13 +83,15 @@ template <typename T> Matrix<T> Matrix<T>::operator^(const T degree) {
 
     for (size_t i = 0; i < this->get_width(); i++) {
       for (size_t j = 0; j < this->get_height(); j++) {
-        if (i == j) one[j][i] = 1;
+        if (i == j) { one[j][i] = 1; }
       }
     }
 
     return one;
-  } else if (degree == 1)
-      return *this;
+  }
+
+  if (degree == 1)
+    return *this;
 
   Matrix ans = *this ^ (degree / 2);
   ans = ans * ans;
