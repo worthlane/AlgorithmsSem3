@@ -26,8 +26,8 @@ struct EndParams
 
 std::vector<ll> recover_answer(const std::vector<ll>& gangsters,
                                const std::vector<ll>& greater_prev,
-                               const std::vector<ll>& less_prev, const size_t max_len,
-                               bool is_greater_zigzag, size_t last_elem);
+                               const std::vector<ll>& less_prev,
+                               const EndParams end_params);
 
 EndParams find_longest_sequence(const std::vector<ll>& greater, const std::vector<ll>& less, const size_t N);
 
@@ -60,14 +60,7 @@ std::vector<ll> find_hoods(const std::vector<ll>& gangsters) {
 
   EndParams end_params = find_longest_sequence(greater, less, N);
 
-  size_t max_len = end_params.max_len;
-  bool is_greater_zigzag = end_params.is_greater_zigzag;
-  size_t last_elem = end_params.last_elem;
-
-  find_longest_sequence(greater, less, N);
-
-  std::vector<ll> hoods = recover_answer(gangsters, greater_prev, less_prev,
-                                         max_len, is_greater_zigzag, last_elem);
+  std::vector<ll> hoods = recover_answer(gangsters, greater_prev, less_prev, end_params);
 
   return hoods;
 }
@@ -111,8 +104,13 @@ void print_data(const std::vector<ll>& hoods) {
 
 std::vector<ll> recover_answer(const std::vector<ll>& gangsters,
                                const std::vector<ll>& greater_prev,
-                               const std::vector<ll>& less_prev, const size_t max_len,
-                               bool is_greater_zigzag, size_t last_elem) {
+                               const std::vector<ll>& less_prev,
+                               const EndParams end_params) {
+
+  size_t max_len = end_params.max_len;
+  bool is_greater_zigzag = end_params.is_greater_zigzag;
+  size_t last_elem = end_params.last_elem;
+
   std::vector<ll> hoods(max_len, 0);
 
   for (int i = max_len - 1; i >= 0; i--) {
