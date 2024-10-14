@@ -6,13 +6,7 @@
 
 #define ll long long
 
-static const ll MODULE = 1000003;
-static const ll INF = 9223372036854775800;
-static const size_t UNKNOWN_SIZE = -1;
-
 static const int NO_PREV = -1;
-
-static const ll MAX_NUM = 2000;
 
 std::vector<ll> find_hoods(const std::vector<ll>& gangsters);
 void fill_dynamic_arrays(const std::vector<ll>& gangsters,
@@ -23,14 +17,19 @@ void fill_dynamic_arrays(const std::vector<ll>& gangsters,
 void read_data(std::vector<ll>& gangsters);
 void print_data(const std::vector<ll>& hoods);
 
+struct EndParams
+{
+  size_t max_len;
+  bool is_greater_zigzag;
+  size_t last_elem;
+};
+
 std::vector<ll> recover_answer(const std::vector<ll>& gangsters,
-                               std::vector<ll>& greater_prev,
-                               std::vector<ll>& less_prev, const size_t max_len,
+                               const std::vector<ll>& greater_prev,
+                               const std::vector<ll>& less_prev, const size_t max_len,
                                bool is_greater_zigzag, size_t last_elem);
 
-void find_longest_sequence(std::vector<ll>& greater, std::vector<ll>& less,
-                           const size_t N, size_t& max_len,
-                           bool& is_greater_zigzag, size_t& last_elem);
+EndParams find_longest_sequence(const std::vector<ll>& greater, const std::vector<ll>& less, const size_t N);
 
 int main() {
   size_t N = 0;
@@ -59,12 +58,13 @@ std::vector<ll> find_hoods(const std::vector<ll>& gangsters) {
 
   fill_dynamic_arrays(gangsters, greater, less, greater_prev, less_prev);
 
-  size_t max_len = 0;
-  bool is_greater_zigzag = false;
-  size_t last_elem = NO_PREV;
+  EndParams end_params = find_longest_sequence(greater, less, N);
 
-  find_longest_sequence(greater, less, N, max_len, is_greater_zigzag,
-                        last_elem);
+  size_t max_len = end_params.max_len;
+  bool is_greater_zigzag = end_params.is_greater_zigzag;
+  size_t last_elem = end_params.last_elem;
+
+  find_longest_sequence(greater, less, N);
 
   std::vector<ll> hoods = recover_answer(gangsters, greater_prev, less_prev,
                                          max_len, is_greater_zigzag, last_elem);
@@ -110,8 +110,8 @@ void print_data(const std::vector<ll>& hoods) {
 }
 
 std::vector<ll> recover_answer(const std::vector<ll>& gangsters,
-                               std::vector<ll>& greater_prev,
-                               std::vector<ll>& less_prev, const size_t max_len,
+                               const std::vector<ll>& greater_prev,
+                               const std::vector<ll>& less_prev, const size_t max_len,
                                bool is_greater_zigzag, size_t last_elem) {
   std::vector<ll> hoods(max_len, 0);
 
@@ -130,9 +130,12 @@ std::vector<ll> recover_answer(const std::vector<ll>& gangsters,
   return hoods;
 }
 
-void find_longest_sequence(std::vector<ll>& greater, std::vector<ll>& less,
-                           const size_t N, size_t& max_len,
-                           bool& is_greater_zigzag, size_t& last_elem) {
+EndParams find_longest_sequence(const std::vector<ll>& greater, const std::vector<ll>& less, const size_t N) {
+
+  size_t max_len = 0;
+  bool is_greater_zigzag = false;
+  size_t last_elem = NO_PREV;
+
   for (size_t i = 0; i < N; i++) {
     if (greater[i] > max_len) {
       last_elem = i;
@@ -144,4 +147,9 @@ void find_longest_sequence(std::vector<ll>& greater, std::vector<ll>& less,
       is_greater_zigzag = false;
     }
   }
+
+  EndParams end_params = {max_len, is_greater_zigzag, last_elem};
+
+  return end_params;
+
 }
