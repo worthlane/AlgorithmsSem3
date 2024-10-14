@@ -10,16 +10,15 @@ static const ll MODULE = 1000003;
 static const ll INF = 9223372036854775800;
 static const size_t UNKNOWN_SIZE = -1;
 
-struct Elements
+struct LCSPrevIndexes
 {
-  size_t i;
-  size_t j;
+  size_t first_lcs_prev_index;
+  size_t second_lcs_prev_index;
 };
 
-void print_vector(std::vector<size_t>& vec);
+void print_vector(const std::vector<size_t>& vec);
 
-std::vector<std::vector<Elements>> lcs_table(
-    std::string& sequence1, std::string& sequence2);
+std::vector<std::vector<LCSPrevIndexes>> lcs_table(const std::string& sequence1, const std::string& sequence2);
 
 struct LCSIndexes
 {
@@ -27,7 +26,7 @@ struct LCSIndexes
   std::vector<size_t> second_indexes;
 };
 
-LCSIndexes get_lcs(std::vector<std::vector<Elements>>& prev,
+LCSIndexes get_lcs(std::vector<std::vector<LCSPrevIndexes>>& prev,
                    const std::string& sequence1, const std::string& sequence2);
 
 int main() {
@@ -37,7 +36,7 @@ int main() {
   std::cin >> sequence1;
   std::cin >> sequence2;
 
-  std::vector<std::vector<Elements>> prev = lcs_table(sequence1, sequence2);
+  std::vector<std::vector<LCSPrevIndexes>> prev = lcs_table(sequence1, sequence2);
   LCSIndexes lcs_indexes = get_lcs(prev, sequence1, sequence2);
 
   std::cout << lcs_indexes.first_indexes.size() << std::endl;
@@ -48,16 +47,15 @@ int main() {
   return 0;
 }
 
-std::vector<std::vector<Elements>> lcs_table(
-    std::string& sequence1, std::string& sequence2) {
+std::vector<std::vector<LCSPrevIndexes>> lcs_table(const std::string& sequence1, const std::string& sequence2) {
   size_t size1 = sequence1.size();
   size_t size2 = sequence2.size();
 
   std::vector<std::vector<size_t>> lcs(size1 + 1,
                                        std::vector<size_t>(size2 + 1, 0));
-  std::vector<std::vector<Elements>> prev(
-      size1 + 1, std::vector<Elements>(
-                     size2 + 1, {UNKNOWN_SIZE, UNKNOWN_SIZE}));
+
+  std::vector<std::vector<LCSPrevIndexes>> prev(size1 + 1,
+                                          std::vector<LCSPrevIndexes>(size2 + 1, {UNKNOWN_SIZE, UNKNOWN_SIZE}));
 
   for (size_t i = 1; i <= size1; i++) {
     for (size_t j = 1; j <= size2; j++) {
@@ -77,7 +75,7 @@ std::vector<std::vector<Elements>> lcs_table(
   return prev;
 }
 
-void print_vector(std::vector<size_t>& vec)
+void print_vector(const std::vector<size_t>& vec)
 {
   size_t size = vec.size();
 
@@ -89,7 +87,7 @@ void print_vector(std::vector<size_t>& vec)
 }
 
 LCSIndexes get_lcs(
-    std::vector<std::vector<Elements>>& prev,
+    std::vector<std::vector<LCSPrevIndexes>>& prev,
     const std::string& sequence1, const std::string& sequence2) {
   std::vector<size_t> lcs1;
   std::vector<size_t> lcs2;
@@ -98,10 +96,12 @@ LCSIndexes get_lcs(
   size_t j = sequence2.size();
 
   while (i != 0 && j != 0) {
-    if (prev[i][j].i == i - 1 && prev[i][j].j == j - 1) {
+    if (prev[i][j].first_lcs_prev_index == i - 1 &&
+        prev[i][j].second_lcs_prev_index == j - 1) {
       lcs1.push_back(i--);
       lcs2.push_back(j--);
-    } else if (prev[i][j].i == i - 1 && prev[i][j].j == j)
+    } else if (prev[i][j].first_lcs_prev_index == i - 1 &&
+               prev[i][j].second_lcs_prev_index == j)
       i--;
     else
       j--;
