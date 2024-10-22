@@ -19,9 +19,22 @@ class Matrix {
         data_(height, std::vector<T>(width, 0)), height_(height), width_(width)
   {}
 
+  Matrix(const size_t n, const T& diag_value, const T& other_value) :
+    Matrix(n, n)
+  {
+    for (size_t i = 0; i < n; i++)
+    {
+      for (size_t j = 0; j < n; j++)
+        data_[i][j] = other_value;
+
+      data_[i][i] = diag_value;
+    }
+  }
+
+
   ~Matrix() { data_.clear(); }
 
-  Matrix<T> operator*(const Matrix<T> &b);
+  Matrix<T> operator*(const Matrix<T> &other);
   Matrix<T> operator^(const T degree);
   Matrix<T> operator=(const Matrix<T> &other);
   std::vector<T>& operator[](const size_t index);
@@ -57,15 +70,15 @@ int main() {
   return 0;
 }
 
-template <typename T> Matrix<T> Matrix<T>::operator*(const Matrix &b) {
-  Matrix result = {this->get_height(), b.get_width()};
+template <typename T> Matrix<T> Matrix<T>::operator*(const Matrix &other) {
+  Matrix result = {this->get_height(), other.get_width()};
 
-  assert(this->get_width() == b.get_height());
+  assert(this->get_width() == other.get_height());
 
   for (int i = 0; i < result[0].size(); i++) {
     for (int j = 0; j < result.get_data().size(); j++) {
       for (int k = 0; k < (*this)[0].size(); k++) {
-        result[j][i] += ((*this)[j][k] * (b.get_data())[k][i]) % MODULE;
+        result[j][i] += ((*this)[j][k] * (other.get_data())[k][i]) % MODULE;
       }
     }
   }
@@ -77,16 +90,9 @@ template <typename T> Matrix<T> Matrix<T>::operator^(const T degree) {
 
   assert(this->get_width() == this->get_height());
 
+  Matrix one = {this->get_height(), 1, 0};
+
   if (degree == 0) {
-
-    Matrix one = {this->get_height(), this->get_width()};
-
-    for (size_t i = 0; i < this->get_width(); i++) {
-      for (size_t j = 0; j < this->get_height(); j++) {
-        if (i == j) { one[j][i] = 1; }
-      }
-    }
-
     return one;
   }
 
