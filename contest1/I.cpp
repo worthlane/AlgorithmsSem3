@@ -17,7 +17,7 @@ void fill_dynamic_arrays(const std::vector<ll>& gangsters,
 void read_data(std::vector<ll>& gangsters);
 void print_data(const std::vector<ll>& hoods);
 
-struct EndParams
+struct SequenceCharacteristics
 {
   size_t max_len;
   bool is_greater_zigzag;
@@ -27,9 +27,9 @@ struct EndParams
 std::vector<ll> recover_answer(const std::vector<ll>& gangsters,
                                const std::vector<ll>& greater_prev,
                                const std::vector<ll>& less_prev,
-                               const EndParams end_params);
+                               const SequenceCharacteristics end_params);
 
-EndParams find_longest_sequence(const std::vector<ll>& greater, const std::vector<ll>& less, const size_t N);
+SequenceCharacteristics find_longest_sequence(const std::vector<ll>& greater, const std::vector<ll>& less, const size_t N);
 
 int main() {
   size_t N = 0;
@@ -58,7 +58,7 @@ std::vector<ll> find_hoods(const std::vector<ll>& gangsters) {
 
   fill_dynamic_arrays(gangsters, greater, less, greater_prev, less_prev);
 
-  EndParams end_params = find_longest_sequence(greater, less, N);
+  SequenceCharacteristics end_params = find_longest_sequence(greater, less, N);
 
   std::vector<ll> hoods = recover_answer(gangsters, greater_prev, less_prev, end_params);
 
@@ -105,7 +105,7 @@ void print_data(const std::vector<ll>& hoods) {
 std::vector<ll> recover_answer(const std::vector<ll>& gangsters,
                                const std::vector<ll>& greater_prev,
                                const std::vector<ll>& less_prev,
-                               const EndParams end_params) {
+                               const SequenceCharacteristics end_params) {
 
   size_t max_len = end_params.max_len;
   bool is_greater_zigzag = end_params.is_greater_zigzag;
@@ -128,7 +128,7 @@ std::vector<ll> recover_answer(const std::vector<ll>& gangsters,
   return hoods;
 }
 
-EndParams find_longest_sequence(const std::vector<ll>& greater, const std::vector<ll>& less, const size_t N) {
+SequenceCharacteristics find_longest_sequence(const std::vector<ll>& greater, const std::vector<ll>& less, const size_t N) {
 
   size_t max_len = 0;
   bool is_greater_zigzag = false;
@@ -146,7 +146,7 @@ EndParams find_longest_sequence(const std::vector<ll>& greater, const std::vecto
     }
   }
 
-  EndParams end_params = {max_len, is_greater_zigzag, last_elem};
+  SequenceCharacteristics end_params = {max_len, is_greater_zigzag, last_elem};
 
   return end_params;
 
