@@ -26,8 +26,7 @@ struct LCSIndexSequences
   std::vector<size_t> second_indexes;
 };
 
-LCSIndexSequences get_lcs(std::vector<std::vector<LCSPrevIndexes>>& prev,
-                   const std::string& sequence1, const std::string& sequence2);
+LCSIndexSequences get_lcs(const std::string& sequence1, const std::string& sequence2);
 
 int main() {
   std::string sequence1;
@@ -36,8 +35,7 @@ int main() {
   std::cin >> sequence1;
   std::cin >> sequence2;
 
-  std::vector<std::vector<LCSPrevIndexes>> prev = lcs_table(sequence1, sequence2);
-  LCSIndexSequences lcs_indexes = get_lcs(prev, sequence1, sequence2);
+  LCSIndexSequences lcs_indexes = get_lcs(sequence1, sequence2);
 
   std::cout << lcs_indexes.first_indexes.size() << std::endl;
 
@@ -86,11 +84,11 @@ void print_vector(const std::vector<size_t>& vec)
   std::cout << std::endl;
 }
 
-LCSIndexSequences get_lcs(
-    std::vector<std::vector<LCSPrevIndexes>>& prev,
-    const std::string& sequence1, const std::string& sequence2) {
+LCSIndexSequences get_lcs(const std::string& sequence1, const std::string& sequence2) {
   std::vector<size_t> lcs1;
   std::vector<size_t> lcs2;
+
+  std::vector<std::vector<LCSPrevIndexes>> prev = lcs_table(sequence1, sequence2);
 
   size_t i = sequence1.size();
   size_t j = sequence2.size();
