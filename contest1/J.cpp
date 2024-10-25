@@ -6,8 +6,6 @@
 
 #define ll long long
 
-static const ll MODULE = 1000003;
-static const ll INF = 9223372036854775800;
 static const size_t UNKNOWN_SIZE = -1;
 
 struct LCSPrevIndexes
