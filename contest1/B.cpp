@@ -6,6 +6,70 @@
 
 static const ll MODULE = 1000003;
 
+template <typename T, T MODULE>
+class Modular {
+  public:
+    Modular(T value) : value_(value % MODULE) {}
+    Modular() : value_(0) {}
+
+    T get() const { return value_; }
+
+    operator T() const { return value_; }
+
+    Modular<T, MODULE> operator=(const Modular<T, MODULE>& other) {
+      value_ = other.value_ % MODULE; return *this;
+    }
+
+    bool operator==(const Modular<T, MODULE>& other) const {
+      return value_ == other.value_;
+    }
+
+    Modular<T, MODULE>& operator+=(const Modular<T, MODULE>& other) {
+      value_ = (value_ + other.value_) % MODULE;
+      return *this;
+    }
+
+    Modular<T, MODULE>& operator-=(const Modular<T, MODULE>& other) {
+      value_ = (value_ - other.value_) % MODULE;
+      return *this;
+    }
+
+    Modular<T, MODULE>& operator*=(const Modular<T, MODULE>& other) {
+      value_ = (value_ * other.value_) % MODULE;
+      return *this;
+    }
+
+    Modular<T, MODULE>& operator/=(const Modular<T, MODULE>& other) {
+      value_ = (value_ / other.value_) % MODULE;
+      return *this;
+    }
+
+    Modular<T, MODULE> operator-() const {
+      return Modular<T, MODULE>(-value_);
+    }
+
+    Modular<T, MODULE> operator+(const Modular<T, MODULE>& other) const {
+      return Modular<T, MODULE>(value_ + other.value_);
+    }
+
+    Modular<T, MODULE> operator-(const Modular<T, MODULE>& other) const {
+      return Modular<T, MODULE>(value_ - other.value_);
+    }
+
+    Modular<T, MODULE> operator*(const Modular<T, MODULE>& other) const {
+      return Modular<T, MODULE>(value_ * other.value_);
+    }
+
+    Modular<T, MODULE> operator/(const Modular<T, MODULE>& other) const {
+      return Modular<T, MODULE>(value_ / other.value_);
+    }
+
+    void print() { std::cout << value_ << std::endl; }
+
+  private:
+    T value_;
+};
+
 template <typename T>
 class Matrix {
  public:
@@ -49,23 +113,31 @@ class Matrix {
     size_t width_;
 };
 
+ll get_paths_amount(Matrix<Modular<ll, MODULE>> start, Matrix<Modular<ll, MODULE>> step, const ll n) {
+
+  Matrix<Modular<ll, MODULE>> answer  = start;
+
+  answer = (step ^ n) * answer;
+
+  return answer[answer.get_height() - 1][0];
+}
+
 int main() {
   ll n = 0;
 
   std::cin >> n;
-
   n--;
 
-  Matrix<ll> ans  = {{{0}, {0}, {0}, {0}, {1}}};
-  Matrix<ll> step = {{{0, 1, 0, 0, 0},
-                    {0, 0, 1, 0, 0},
-                    {0, 0, 0, 1, 0},
-                    {0, 0, 0, 0, 1},
-                    {1, 1, 1, 1, 1}}};
+  Matrix<Modular<ll, MODULE>> answer  = {{{0}, {0}, {0}, {0}, {1}}};
+  Matrix<Modular<ll, MODULE>> step =  {{{0, 1, 0, 0, 0},
+                                        {0, 0, 1, 0, 0},
+                                        {0, 0, 0, 1, 0},
+                                        {0, 0, 0, 0, 1},
+                                        {1, 1, 1, 1, 1}}};
 
-  ans = (step ^ n) * ans;
+  ll paths_amount = get_paths_amount(answer, step, n);
 
-  std::cout << ans[4][0] % MODULE << std::endl;
+  std::cout << paths_amount << std::endl;
 
   return 0;
 }
@@ -78,7 +150,7 @@ template <typename T> Matrix<T> Matrix<T>::operator*(const Matrix &other) {
   for (int i = 0; i < result[0].size(); i++) {
     for (int j = 0; j < result.get_data().size(); j++) {
       for (int k = 0; k < (*this)[0].size(); k++) {
-        result[j][i] += ((*this)[j][k] * (other.get_data())[k][i]) % MODULE;
+        result[j][i] += ((*this)[j][k] * (other.get_data())[k][i]);
       }
     }
   }
@@ -92,20 +164,20 @@ template <typename T> Matrix<T> Matrix<T>::operator^(const T degree) {
 
   Matrix one = {this->get_height(), 1, 0};
 
-  if (degree == 0) {
+  if (degree == T(0)) {
     return one;
   }
 
-  if (degree == 1)
+  if (degree == T(1))
     return *this;
 
-  Matrix ans = *this ^ (degree / 2);
-  ans = ans * ans;
+  Matrix answer = *this ^ (degree / T(2));
+  answer = answer * answer;
 
-  if (degree % 2 == 1)
-    ans = ans * *this;
+  if (degree % T(2) == T(1))
+    answer = answer * *this;
 
-  return ans;
+  return answer;
 }
 
 template <typename T> Matrix<T> Matrix<T>::operator=(const Matrix<T> &other)
