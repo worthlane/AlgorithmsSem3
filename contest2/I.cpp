@@ -48,10 +48,6 @@ class BigInt {
     return res;
   }
 
-  BigInt add(const BigInt& other, const int64_t mod) {
-    return (*this + other) % mod;
-  }
-
   BigInt operator-(const BigInt& other) const {
     BigInt res;
 
@@ -83,10 +79,6 @@ class BigInt {
     return res;
   }
 
-  BigInt sub(const BigInt& other, const int64_t mod) {
-    return (*this - other) % mod;
-  }
-
   BigInt operator*(const BigInt& other) const {
     BigInt res;
 
@@ -106,10 +98,6 @@ class BigInt {
     return res;
   }
 
-  BigInt mul(const BigInt& other, const int64_t mod) {
-    return (*this * other) % mod;
-  }
-
   BigInt operator/(const int64_t other) const {
     BigInt res;
 
@@ -127,8 +115,6 @@ class BigInt {
 
     return res;
   }
-
-  BigInt div(const int64_t other, const int64_t mod) { return (*this / other) % mod; }
 
   BigInt operator%(const int64_t other) {
     BigInt quotient(*this / other);
@@ -151,7 +137,7 @@ class BigInt {
   std::vector<int> digits;
 };
 
-std::ostream& operator << (std::ostream& out, const BigInt& number) {
+std::ostream& operator<<(std::ostream& out, const BigInt& number) {
   if (number.digits.size() == 0) {
     return out << '0';
   }
@@ -163,12 +149,41 @@ std::ostream& operator << (std::ostream& out, const BigInt& number) {
   return out;
 }
 
-std::istream& operator >> (std::istream& in, BigInt& number) {
+std::istream& operator>>(std::istream& in, BigInt& number) {
   std::string s;
   in >> s;
   number = BigInt(s);
   return in;
 }
+
+template<typename T>
+class Modular {
+  public:
+    explicit Modular(const T& value, const int64_t mod) : value_(value), mod_(mod) {
+      value_ = value_ % mod;
+    }
+
+    Modular operator+(const Modular& other) {
+      return Modular((value_ + other.value_) % mod_, mod_);
+    }
+
+    Modular operator*(const Modular& other) {
+      return Modular((value_ * other.value_) % mod_, mod_);
+    }
+
+    Modular operator/(const int64_t other) {
+      return Modular((value_ / other) % mod_, mod_);
+    }
+
+    Modular operator-(const Modular& other) {
+      return Modular((value_ - other.value_) % mod_, mod_);
+    }
+
+  private:
+    T value_;
+    int64_t mod_;
+
+};
 
 template <typename T>
 class Matrix {
@@ -186,8 +201,7 @@ class Matrix {
     for (size_t i = 0; i < rows; i++) {
       for (size_t j = 0; j < other.columns; j++) {
         for (size_t k = 0; k < columns; k++) {
-          res.data[i][j] =
-              (res.data[i][j] + (data[i][k] * other.data[k][j]) % mod) % mod;
+          res.data[i][j] = (res.data[i][j] + (data[i][k] * other.data[k][j]) % mod) % mod;
         }
       }
     }
@@ -203,9 +217,7 @@ class Matrix {
 
     Matrix a = *this;
 
-    BigInt zero(0);
-
-    while (power != zero) {
+    while (power != static_cast<BigInt>(0)) {
       if (power % 2 == static_cast<BigInt>(1)) res = res.mul(a, mod);
 
       a = a.mul(a, mod);
