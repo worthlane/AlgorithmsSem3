@@ -6,13 +6,11 @@
 #include <iostream>
 #include <vector>
 
-#define ll int64_t
-
-static const ll INF = 1e10;
+static const int64_t INF = 1e10;
 
 class BigInt {
  public:
-  BigInt(const std::string& s) {
+  explicit BigInt(const std::string& s) {
     for (size_t i = 0; i < s.size(); i++) {
       digits.push_back(s[i] - '0');
     }
@@ -20,24 +18,26 @@ class BigInt {
     std::reverse(digits.begin(), digits.end());
   }
 
-  BigInt(int n) {
+  explicit BigInt(int n) {
     while (n > 0) {
       digits.push_back(n % 10);
       n /= 10;
     }
   }
 
-  BigInt() : BigInt(0) {}
+  explicit BigInt() : BigInt(0) {}
 
-  void print() {
+  std::ostream& operator << (std::ostream& out) {
     if (digits.size() == 0) {
-      std::cout << '0';
-      return;
+      out << '0';
+      return out;
     }
 
     for (int i = digits.size() - 1; i >= 0; i--) {
-      std::cout << static_cast<char>(digits[i] + '0');
+      out << static_cast<char>(digits[i] + '0');
     }
+
+    return out;
   }
 
   BigInt operator+(const BigInt& other) const {
@@ -61,7 +61,7 @@ class BigInt {
     return res;
   }
 
-  BigInt add(const BigInt& other, const ll mod) {
+  BigInt add(const BigInt& other, const int64_t mod) {
     return (*this + other) % mod;
   }
 
@@ -96,7 +96,7 @@ class BigInt {
     return res;
   }
 
-  BigInt sub(const BigInt& other, const ll mod) {
+  BigInt sub(const BigInt& other, const int64_t mod) {
     return (*this - other) % mod;
   }
 
@@ -119,14 +119,14 @@ class BigInt {
     return res;
   }
 
-  BigInt mul(const BigInt& other, const ll mod) {
+  BigInt mul(const BigInt& other, const int64_t mod) {
     return (*this * other) % mod;
   }
 
-  BigInt operator/(const ll other) const {
+  BigInt operator/(const int64_t other) const {
     BigInt res;
 
-    ll remain = 0;
+    int64_t remain = 0;
 
     for (int i = digits.size() - 1; i >= 0; i--) {
       remain = remain * 10 + digits[i];
@@ -141,12 +141,12 @@ class BigInt {
     return res;
   }
 
-  BigInt div(const ll other, const ll mod) { return (*this / other) % mod; }
+  BigInt div(const int64_t other, const int64_t mod) { return (*this / other) % mod; }
 
-  BigInt operator%(const ll other) {
+  BigInt operator%(const int64_t other) {
     BigInt quotient(*this / other);
 
-    return *this - (quotient * other);
+    return *this - (quotient * static_cast<BigInt>(other));
   }
 
   bool operator==(const BigInt& other) {
@@ -200,7 +200,7 @@ class Matrix {
     BigInt zero(0);
 
     while (power != zero) {
-      if (power % 2 == 1) res = res.mul(a, mod);
+      if (power % 2 == static_cast<BigInt>(1)) res = res.mul(a, mod);
 
       a = a.mul(a, mod);
       power = power / 2;
@@ -235,7 +235,7 @@ bool possible_transistion(size_t mask_1, size_t mask_2, size_t M) {
 }
 
 int main() {
-  ll M = 0, mod = 0;
+  int64_t M = 0, mod = 0;
   std::string s;
 
   std::cin >> s;
@@ -245,7 +245,7 @@ int main() {
 
   size_t max_profile = (1 << M) - 1;
 
-  Matrix<ll> profile(max_profile + 1, max_profile + 1);
+  Matrix<int64_t> profile(max_profile + 1, max_profile + 1);
 
   for (size_t i = 0; i <= max_profile; i++) {
     for (size_t j = 0; j <= max_profile; j++) {
@@ -258,9 +258,9 @@ int main() {
 
   N = N - BigInt(1);
 
-  Matrix<ll> res = profile.pow(N, mod);
+  Matrix<int64_t> res = profile.pow(N, mod);
 
-  ll ans = 0;
+  int64_t ans = 0;
 
   for (size_t i = 0; i <= max_profile; i++) {
     for (size_t j = 0; j <= max_profile; j++) ans = (ans + res[i][j]) % mod;
