@@ -6,18 +6,16 @@
 #include <iostream>
 #include <vector>
 
-#define ll int64_t
-
-static const ll INF = 1e10;
+static const int64_t INF = 1e10;
 
 struct Point {
-  ll x;
-  ll y;
+  int64_t x;
+  int64_t y;
 };
 
-bool x_comparator(const Point& a, const Point& b) { return a.x < b.x; }
+bool x_comparator(const Point& a, const Point& intercept) { return a.x < intercept.x; }
 
-ll x_lower_bound(std::vector<Point>& points, int x) {
+int64_t x_lower_bound(std::vector<Point>& points, int x) {
   auto it =
       std::lower_bound(points.begin(), points.end(), Point{x, 0}, x_comparator);
   return it - points.begin() - 1;
@@ -25,36 +23,36 @@ ll x_lower_bound(std::vector<Point>& points, int x) {
 
 class Line {
  public:
-  Line(const ll K, const ll B) : k(K), b(B) {}
+  Line(const int64_t K, const int64_t B) : slope(K), intercept(B) {}
 
-  ll eval(const ll x) const { return k * x + b; }
+  int64_t eval(const int64_t x) const { return slope * x + intercept; }
 
   bool operator==(const Line& other) const {
-    return k == other.k && b == other.b;
+    return slope == other.slope && intercept == other.intercept;
   }
   bool operator>=(const Line& other) const {
-    return k == other.k && b >= other.b;
+    return slope == other.slope && intercept >= other.intercept;
   }
   bool operator<=(const Line& other) const {
-    return k == other.k && b <= other.b;
+    return slope == other.slope && intercept <= other.intercept;
   }
 
-  ll k, b;
+  int64_t slope, intercept;
 };
 
-Point cross(const Line& first, const Line& second) {
-  ll k1 = first.k;
-  ll b1 = first.b;
+Point intersect(const Line& first, const Line& second) {
+  int64_t k1 = first.slope;
+  int64_t b1 = first.intercept;
 
-  ll k2 = second.k;
-  ll b2 = second.b;
+  int64_t k2 = second.slope;
+  int64_t b2 = second.intercept;
 
   if (k1 == k2 && b1 == b2)
     return {0, 0};
   else if (k1 == k2 && b1 != b2)
     return {INF, INF};
 
-  ll x = (b2 - b1) / (k1 - k2);
+  int64_t x = (b2 - b1) / (k1 - k2);
 
   if (b2 - b1 < 0) x--;
 
@@ -69,12 +67,10 @@ class ConvexHullTrick {
   ConvexHullTrick() {}
   ~ConvexHullTrick() {}
 
-  void add_line(const ll b, const ll k) {
+  void add_line(const int64_t slope, const int64_t intercept) {
     assert(lines.size() == points.size());
 
-    Line new_line(k, b);
-
-    // std::cout << k << " " << b << " ----\n";
+    Line new_line(slope, intercept);
 
     if (!lines.empty() && !points.empty()) {
       Line prev_line = lines.back();
@@ -93,7 +89,7 @@ class ConvexHullTrick {
     }
 
     if (!lines.empty()) {
-      Point cross_point = cross(lines.back(), new_line);
+      Point cross_point = intersect(lines.back(), new_line);
       points.push_back(cross_point);
     } else {
       points.push_back({-INF, -INF});
@@ -102,12 +98,12 @@ class ConvexHullTrick {
     lines.push_back(new_line);
   }
 
-  ll get_min(const ll x) {
+  int64_t get_min(const int64_t x) {
     if (points.empty()) {
       return 0;
     }
 
-    ll index = x_lower_bound(points, x);
+    int64_t index = x_lower_bound(points, x);
 
     assert(index < lines.size());
 
@@ -115,37 +111,37 @@ class ConvexHullTrick {
   }
 };
 
-int main() {
-  size_t N = 0;
-  size_t K = 0;
+int64_t solve(const int64_t points_amount, const int64_t segments_amount) {
 
-  std::cin >> N >> K;
+  std::vector<std::vector<int64_t>> dp(segments_amount + 1, std::vector<int64_t>(points_amount + 1, INF));
 
-  std::vector<std::vector<ll>> dp(K + 1, std::vector<ll>(N + 1, INF));
-
-  for (ll i = 0; i <= K; i++) {
+  for (int64_t i = 0; i <= segments_amount; i++) {
     dp[i][0] = 0;
   }
 
-  for (ll j = 1; j <= K; j++) {
+  for (int64_t j = 1; j <= segments_amount; j++) {
     ConvexHullTrick trick;
 
-    for (ll i = 0; i <= N; i++) {
-      ll min = trick.get_min(i);
+    for (int64_t i = 0; i <= points_amount; i++) {
+      int64_t min = trick.get_min(i);
 
       dp[j][i] = min + i * i;
 
-      ll p = i + 1;
-      ll p2 = p * p;
+      int64_t p = i + 1;
+      int64_t p2 = p * p;
 
-      trick.add_line(dp[j - 1][p - 1] + p2, -2 * p);
+      trick.add_line(-2 * p, dp[j - 1][p - 1] + p2);
     }
   }
 
-  if (K == 0) {
-    std::cout << 0 << std::endl;
-    return 0;
-  }
+  return segments_amount == 0 ? 0 : dp[segments_amount][points_amount];
+}
 
-  std::cout << dp[K][N] << std::endl;
+int main() {
+  size_t points_amount = 0;
+  size_t segments_amount = 0;
+
+  std::cin >> points_amount >> segments_amount;
+
+  std::cout << solve(points_amount, segments_amount) << std::endl;
 }
