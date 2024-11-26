@@ -16,52 +16,26 @@ struct Edge {
 
 static const ll NO_CONNECTION = -1;
 
-bool edge_comp(const Edge& a, const Edge& b) { return a.weight > b.weight; }
+bool edge_comp(const Edge& self, const Edge& other) { return self.weight > other.weight; }
 
 class DSU {
  public:
   DSU(const size_t cnt);
 
-  ll find_set(const ll a_id);
+  ll find_set(const ll self_id);
 
-  void unite_sets(const ll a_id, const ll b_id);
+  void unite_sets(const ll self_id, const ll other_id);
 
  private:
   std::vector<ll> parent_;
   std::vector<ll> size_;
 };
 
-int main() {
-  ll N = 0, M = 0, K = 0;
+std::vector<Edge> get_edges(const size_t cnt, bool have_weights = true);
 
-  std::cin >> N >> M >> K;
-
-  std::vector<Edge> edges(M);
-  std::vector<Edge> permanent_connection(K);
-
-  for (size_t i = 0; i < M; i++) {
-    ll start = 0, end = 0, weight = 0;
-
-    std::cin >> start >> end >> weight;
-
-    edges[i].start = start - 1;
-    edges[i].end = end - 1;
-    edges[i].weight = weight;
-  }
-
-  for (size_t i = 0; i < K; i++) {
-    ll start = 0, end = 0;
-
-    std::cin >> start >> end;
-
-    permanent_connection[i].start = start - 1;
-    permanent_connection[i].end = end - 1;
-    permanent_connection[i].weight = NO_CONNECTION;
-  }
-
+void connect_vertexes(std::vector<Edge>& edges, std::vector<Edge>& permanent_connection, const size_t v_amount) {
   std::sort(edges.begin(), edges.end(), edge_comp);
-
-  DSU dsu(N);
+  DSU dsu(v_amount);
 
   for (auto& edge : edges) {
     if (dsu.find_set(edge.start) != dsu.find_set(edge.end)) {
@@ -75,6 +49,17 @@ int main() {
       }
     }
   }
+}
+
+int main() {
+  ll N = 0, M = 0, K = 0;
+
+  std::cin >> N >> M >> K;
+
+  std::vector<Edge> edges = get_edges(M);
+  std::vector<Edge> permanent_connection = get_edges(K, false);
+
+  connect_vertexes(edges, permanent_connection, N);
 
   for (auto& connection : permanent_connection) {
     std::cout << connection.weight << std::endl;
@@ -83,27 +68,45 @@ int main() {
   return 0;
 }
 
+std::vector<Edge> get_edges(const size_t cnt, bool have_weights) {
+  std::vector<Edge> edges(cnt);
+
+  for (size_t i = 0; i < cnt; i++) {
+    ll start = 0, end = 0, weight = NO_CONNECTION;
+
+    std::cin >> start >> end;
+
+    if (have_weights) std::cin >> weight;
+
+    edges[i].start = start - 1;
+    edges[i].end = end - 1;
+    edges[i].weight = weight;
+  }
+
+  return edges;
+}
+
 DSU::DSU(const size_t cnt) : parent_(cnt), size_(cnt, 1) {
   for (size_t id = 0; id < cnt; id++) {
     parent_[id] = id;
   }
 }
 
-ll DSU::find_set(const ll a_id) {
-  if (a_id == parent_[a_id])
-    return a_id;
+ll DSU::find_set(const ll self_id) {
+  if (self_id == parent_[self_id])
+    return self_id;
   else
-    return parent_[a_id] = find_set(parent_[a_id]);
+    return parent_[self_id] = find_set(parent_[self_id]);
 }
 
-void DSU::unite_sets(const ll a_id, const ll b_id) {
-  ll a_root = find_set(a_id);
-  ll b_root = find_set(b_id);
+void DSU::unite_sets(const ll self_id, const ll other_id) {
+  ll self_root  = find_set(self_id);
+  ll other_root = find_set(other_id);
 
-  if (a_root != b_root) {
-    if (size_[a_root] < size_[b_root]) std::swap(a_root, b_root);
+  if (self_root != other_root) {
+    if (size_[self_root] < size_[other_root]) std::swap(self_root, other_root);
 
-    parent_[b_root] = a_root;
-    size_[a_root] += size_[b_root];
+    parent_[other_root] = self_root;
+    size_[self_root] += size_[other_root];
   }
 }
