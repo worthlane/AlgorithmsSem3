@@ -27,19 +27,6 @@ class BigInt {
 
   explicit BigInt() : BigInt(0) {}
 
-  std::ostream& operator << (std::ostream& out) {
-    if (digits.size() == 0) {
-      out << '0';
-      return out;
-    }
-
-    for (int i = digits.size() - 1; i >= 0; i--) {
-      out << static_cast<char>(digits[i] + '0');
-    }
-
-    return out;
-  }
-
   BigInt operator+(const BigInt& other) const {
     BigInt res;
 
@@ -164,22 +151,41 @@ class BigInt {
   std::vector<int> digits;
 };
 
+std::ostream& operator << (std::ostream& out, const BigInt& number) {
+  if (number.digits.size() == 0) {
+    return out << '0';
+  }
+
+  for (int i = number.digits.size() - 1; i >= 0; i--) {
+    out << static_cast<char>(number.digits[i] + '0');
+  }
+
+  return out;
+}
+
+std::istream& operator >> (std::istream& in, BigInt& number) {
+  std::string s;
+  in >> s;
+  number = BigInt(s);
+  return in;
+}
+
 template <typename T>
 class Matrix {
  public:
-  Matrix(const size_t n, const size_t m)
-      : n(n), m(m), data(n, std::vector<T>(m, 0)) {}
+  Matrix(const size_t rows, const size_t columns)
+      : rows(rows), columns(columns), data(rows, std::vector<T>(columns, 0)) {}
 
   std::vector<T>& operator[](size_t i) { return data[i]; }
 
   Matrix mul(const Matrix& other, const T mod) {
-    assert(m == other.n);
+    assert(columns == other.rows);
 
-    Matrix res(n, other.m);
+    Matrix res(rows, other.columns);
 
-    for (size_t i = 0; i < n; i++) {
-      for (size_t j = 0; j < other.m; j++) {
-        for (size_t k = 0; k < m; k++) {
+    for (size_t i = 0; i < rows; i++) {
+      for (size_t j = 0; j < other.columns; j++) {
+        for (size_t k = 0; k < columns; k++) {
           res.data[i][j] =
               (res.data[i][j] + (data[i][k] * other.data[k][j]) % mod) % mod;
         }
@@ -190,10 +196,10 @@ class Matrix {
   }
 
   Matrix pow(BigInt& power, const T mod) {
-    assert(n == m);
+    assert(rows == columns);
 
-    Matrix res(n, n);
-    for (size_t i = 0; i < n; i++) res[i][i] = 1;
+    Matrix res(rows, rows);
+    for (size_t i = 0; i < rows; i++) res[i][i] = 1;
 
     Matrix a = *this;
 
@@ -209,17 +215,17 @@ class Matrix {
     return res;
   }
 
-  size_t n, m;
+  size_t rows, columns;
   std::vector<std::vector<T>> data;
 };
 
 bool get_bit(size_t mask, size_t pos) { return (mask & (1 << pos)) != 0; }
 
-bool possible_transistion(size_t mask_1, size_t mask_2, size_t M) {
+bool has_transistion(size_t mask_1, size_t mask_2, size_t mask_len) {
   bool prev_bit_1 = get_bit(mask_1, 0);
   bool prev_bit_2 = get_bit(mask_2, 0);
 
-  for (size_t i = 1; i < M; i++) {
+  for (size_t i = 1; i < mask_len; i++) {
     bool cur_bit_1 = get_bit(mask_1, i);
     bool cur_bit_2 = get_bit(mask_2, i);
 
@@ -234,36 +240,43 @@ bool possible_transistion(size_t mask_1, size_t mask_2, size_t M) {
   return true;
 }
 
-int main() {
-  int64_t M = 0, mod = 0;
-  std::string s;
-
-  std::cin >> s;
-  BigInt N(s);
-
-  std::cin >> M >> mod;
-
-  size_t max_profile = (1 << M) - 1;
+Matrix<int64_t> make_transistion_matrix(const size_t mask_len) {
+  size_t max_profile = (1 << mask_len) - 1;
 
   Matrix<int64_t> profile(max_profile + 1, max_profile + 1);
 
   for (size_t i = 0; i <= max_profile; i++) {
     for (size_t j = 0; j <= max_profile; j++) {
-      if (possible_transistion(i, j, M))
+      if (has_transistion(i, j, mask_len))
         profile[i][j] = 1;
       else
         profile[i][j] = 0;
     }
   }
 
-  N = N - BigInt(1);
+  return profile;
+}
 
-  Matrix<int64_t> res = profile.pow(N, mod);
+int main() {
+  int64_t city_length = 0, mod = 0;
+  BigInt  city_width;
+
+  std::cin >> city_width >> city_length >> mod;
+
+  size_t max_profile = (1 << city_length) - 1;
+
+  Matrix<int64_t> profile = make_transistion_matrix(city_length);
+
+  city_width = city_width - BigInt(1);
+
+  Matrix<int64_t> res = profile.pow(city_width, mod);
 
   int64_t ans = 0;
 
   for (size_t i = 0; i <= max_profile; i++) {
-    for (size_t j = 0; j <= max_profile; j++) ans = (ans + res[i][j]) % mod;
+    for (size_t j = 0; j <= max_profile; j++) {
+      ans = (ans + res[i][j]) % mod;
+    }
   }
 
   std::cout << ans << std::endl;
