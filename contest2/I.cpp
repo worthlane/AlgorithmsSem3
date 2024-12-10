@@ -7,6 +7,7 @@
 #include <vector>
 
 static const int64_t INF = 1e10;
+static int64_t MOD = 1e9;
 
 class BigInt {
  public:
@@ -169,6 +170,8 @@ class Modular {
       value_ = value_ % mod;
     }
 
+    Modular(const T& value) : value_(value) {}
+
     Modular operator+(const Modular& other) {
       return Modular((value_ + other.value_) % mod_, mod_);
     }
@@ -185,11 +188,19 @@ class Modular {
       return Modular((value_ - other.value_) % mod_, mod_);
     }
 
+    T get_value() const { return value_; }
+
+    T operator=(const T& other) { return value_ = other; }
+
   private:
     T value_;
-    int64_t mod_;
+    int64_t mod_ = MOD;
 
 };
+
+std::ostream& operator<<(std::ostream& out, const Modular<int64_t>& value) {
+  return out << value.get_value();
+}
 
 template <typename T>
 class Matrix {
@@ -199,7 +210,7 @@ class Matrix {
 
   std::vector<T>& operator[](size_t i) { return data[i]; }
 
-  Matrix mul(const Matrix& other, const T mod) {
+  Matrix operator*(const Matrix& other) {
     assert(columns == other.rows);
 
     Matrix res(rows, other.columns);
@@ -207,7 +218,7 @@ class Matrix {
     for (size_t i = 0; i < rows; i++) {
       for (size_t j = 0; j < other.columns; j++) {
         for (size_t k = 0; k < columns; k++) {
-          res.data[i][j] = (res.data[i][j] + (data[i][k] * other.data[k][j]) % mod) % mod;
+          res.data[i][j] = (res.data[i][j] + (data[i][k] * other.data[k][j]));
         }
       }
     }
@@ -215,7 +226,7 @@ class Matrix {
     return res;
   }
 
-  Matrix pow(BigInt& power, const T mod) {
+  Matrix operator^(BigInt& power) {
     assert(rows == columns);
 
     Matrix res(rows, rows);
@@ -224,9 +235,9 @@ class Matrix {
     Matrix a = *this;
 
     while (power != static_cast<BigInt>(0)) {
-      if (power % 2 == static_cast<BigInt>(1)) res = res.mul(a, mod);
+      if (power % 2 == static_cast<BigInt>(1)) res = res * a;
 
-      a = a.mul(a, mod);
+      a = a * a;
       power = power / 2;
     }
 
@@ -258,10 +269,10 @@ bool has_transistion(size_t mask_1, size_t mask_2, size_t mask_len) {
   return true;
 }
 
-Matrix<int64_t> make_transistion_matrix(const size_t mask_len) {
+Matrix<Modular<int64_t>> make_transistion_matrix(const size_t mask_len) {
   size_t max_profile = (1 << mask_len) - 1;
 
-  Matrix<int64_t> profile(max_profile + 1, max_profile + 1);
+  Matrix<Modular<int64_t>> profile(max_profile + 1, max_profile + 1);
 
   for (size_t i = 0; i <= max_profile; i++) {
     for (size_t j = 0; j <= max_profile; j++) {
@@ -280,20 +291,21 @@ int main() {
   BigInt  city_width;
 
   std::cin >> city_width >> city_length >> mod;
+  MOD = mod;
 
   size_t max_profile = (1 << city_length) - 1;
 
-  Matrix<int64_t> profile = make_transistion_matrix(city_length);
+  Matrix<Modular<int64_t>> profile = make_transistion_matrix(city_length);
 
   city_width = city_width - BigInt(1);
 
-  Matrix<int64_t> res = profile.pow(city_width, mod);
+  Matrix<Modular<int64_t>> res = profile ^ city_width;
 
-  int64_t ans = 0;
+  Modular<int64_t> ans(0, mod);
 
   for (size_t i = 0; i <= max_profile; i++) {
     for (size_t j = 0; j <= max_profile; j++) {
-      ans = (ans + res[i][j]) % mod;
+      ans = ans + res[i][j];
     }
   }
 
