@@ -8,27 +8,84 @@
 
 enum Color { NotVisited, InProgress, Visited };
 
-void dfs_recursive(std::vector<std::vector<int64_t>>& graph, const int64_t start,
-                   std::vector<Color>& colors, std::vector<int64_t>& order) {
-  colors[start] = InProgress;
-  for (size_t neighbour : graph[start]) {
-    if (colors[neighbour] == NotVisited)
-      dfs_recursive(graph, neighbour, colors, order);
+class StrongComponentSearcher
+{
+public:
+  StrongComponentSearcher(const size_t vertexes_amt);
+
+  void get_edges(const size_t edges_amt);
+  void find_strong_components();
+
+  std::vector<int64_t> get_components() const { return components_; }
+  int64_t              get_components_amt() const { return curr_component_ - 1; }
+private:
+  std::vector<std::vector<int64_t>> graph_;
+  std::vector<std::vector<int64_t>> inverse_graph_;
+  std::vector<Color> colors_;
+  std::vector<Color> inverse_colors_;
+  std::vector<int64_t> components_;
+  int64_t curr_component_ = 1;
+
+  void dfs_recursive(const int64_t start, std::vector<int64_t>& order);
+  void dfs_inverse_fill_component(const int64_t start);
+};
+
+void StrongComponentSearcher::dfs_recursive(const int64_t start, std::vector<int64_t>& order) {
+  colors_[start] = InProgress;
+  for (size_t neighbour : graph_[start]) {
+    if (colors_[neighbour] == NotVisited)
+      dfs_recursive(neighbour, order);
   }
-  colors[start] = Visited;
+  colors_[start] = Visited;
   order.push_back(start);
 }
 
-void dfs_fill_component(std::vector<std::vector<int64_t>>& graph, const int64_t start,
-                        std::vector<Color>& colors, std::vector<int64_t>& components,
-                        const int64_t curr_component) {
-  colors[start] = InProgress;
-  for (size_t neighbour : graph[start]) {
-    if (colors[neighbour] == NotVisited)
-      dfs_fill_component(graph, neighbour, colors, components, curr_component);
+void StrongComponentSearcher::dfs_inverse_fill_component(const int64_t start) {
+  inverse_colors_[start] = InProgress;
+  for (size_t neighbour : inverse_graph_[start]) {
+    if (inverse_colors_[neighbour] == NotVisited)
+      dfs_inverse_fill_component(neighbour);
   }
-  colors[start] = Visited;
-  components[start] = curr_component;
+  inverse_colors_[start] = Visited;
+  components_[start] = curr_component_;
+}
+
+StrongComponentSearcher::StrongComponentSearcher(const size_t vertexes_amt) :
+  colors_(vertexes_amt, NotVisited), inverse_colors_(vertexes_amt, NotVisited),
+  components_(vertexes_amt), graph_(vertexes_amt), inverse_graph_(vertexes_amt)
+{
+}
+
+void StrongComponentSearcher::get_edges(const size_t edges_amt) {
+  for (size_t i = 0; i < edges_amt; i++) {
+    int64_t start = 0, end = 0;
+    std::cin >> start >> end;
+    start--; end--;
+    graph_[start].push_back(end);
+    inverse_graph_[end].push_back(start);
+  }
+}
+
+void StrongComponentSearcher::find_strong_components() {
+  size_t vertexes_amt = graph_.size();
+  std::vector<int64_t> order;
+
+  for (size_t i = 0; i < vertexes_amt; i++) {
+    if (colors_[i] == NotVisited) {
+      dfs_recursive(i, order);
+    }
+  }
+
+  curr_component_ = 1;
+
+  for (int64_t i = vertexes_amt - 1; i >= 0; i--) {
+    int64_t elem = order[i];
+
+    if (inverse_colors_[elem] == NotVisited) {
+      dfs_inverse_fill_component(elem);
+      curr_component_++;
+    }
+  }
 }
 
 int main() {
@@ -36,43 +93,14 @@ int main() {
 
   std::cin >> vertexes_amt >> edges_amt;
 
-  std::vector<std::vector<int64_t>> graph(vertexes_amt);
-  std::vector<std::vector<int64_t>> inverse_graph(vertexes_amt);
+  StrongComponentSearcher searcher(vertexes_amt);
+  searcher.get_edges(edges_amt);
+  searcher.find_strong_components();
 
-  for (size_t i = 0; i < edges_amt; i++) {
-    int64_t start = 0, end = 0;
-    std::cin >> start >> end;
-    start--;
-    end--;
-    graph[start].push_back(end);
-    inverse_graph[end].push_back(start);
-  }
+  int64_t components_amt = searcher.get_components_amt();
+  std::vector<int64_t> components = searcher.get_components();
 
-  std::vector<Color> colors(vertexes_amt, NotVisited);
-  std::vector<int64_t> order;
-
-  for (size_t i = 0; i < vertexes_amt; i++) {
-    if (colors[i] == NotVisited) {
-      dfs_recursive(graph, i, colors, order);
-    }
-  }
-
-  std::vector<int64_t> components(vertexes_amt, 0);
-  std::vector<Color> inverse_colors(vertexes_amt, NotVisited);
-
-  int64_t curr_component = 1;
-
-  for (int64_t i = vertexes_amt - 1; i >= 0; i--) {
-    int64_t elem = order[i];
-
-    if (inverse_colors[elem] == NotVisited) {
-      dfs_fill_component(inverse_graph, elem, inverse_colors, components,
-                         curr_component);
-      curr_component++;
-    }
-  }
-
-  std::cout << curr_component - 1 << std::endl;
+  std::cout << components_amt << std::endl;
 
   for (int64_t elem : components) {
     std::cout << elem << " ";
