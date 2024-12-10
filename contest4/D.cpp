@@ -5,7 +5,6 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-//#include <stdarg.h>
 
 #define ll long long
 
@@ -37,8 +36,7 @@ class DSU {
 
 std::vector<Edge> get_edges(const size_t cnt, bool have_weights = true);
 
-void connect_vertexes(std::vector<Edge>& edges, std::vector<Edge>& permanent_connection, const size_t v_amount) {
-  std::sort(edges.begin(), edges.end(), edge_comp);
+void connect_vertexes(const std::vector<Edge>& edges, std::vector<Edge>& permanent_connection, const size_t v_amount) {
   DSU dsu(v_amount);
 
   for (auto& edge : edges) {
@@ -63,6 +61,7 @@ int main() {
   std::vector<Edge> edges = get_edges(M);
   std::vector<Edge> permanent_connection = get_edges(K, false);
 
+  std::sort(edges.begin(), edges.end(), edge_comp);
   connect_vertexes(edges, permanent_connection, N);
 
   for (auto& connection : permanent_connection) {
