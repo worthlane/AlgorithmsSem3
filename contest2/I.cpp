@@ -12,15 +12,15 @@ class BigInt {
  public:
   explicit BigInt(const std::string& s) {
     for (size_t i = 0; i < s.size(); i++) {
-      digits.push_back(s[i] - '0');
+      digits_.push_back(s[i] - '0');
     }
 
-    std::reverse(digits.begin(), digits.end());
+    std::reverse(digits_.begin(), digits_.end());
   }
 
   explicit BigInt(int n) {
     while (n > 0) {
-      digits.push_back(n % 10);
+      digits_.push_back(n % 10);
       n /= 10;
     }
   }
@@ -30,17 +30,17 @@ class BigInt {
   BigInt operator+(const BigInt& other) const {
     BigInt res;
 
-    size_t max_len = std::max(digits.size(), other.digits.size());
+    size_t max_len = std::max(digits_.size(), other.digits_.size());
     int remain = 0;
 
     for (size_t i = 0; (i < max_len) || remain; i++) {
       int diff = remain;
 
-      if (i < digits.size()) diff += digits[i];
+      if (i < digits_.size()) diff += digits_[i];
 
-      if (i < other.digits.size()) diff += other.digits[i];
+      if (i < other.digits_.size()) diff += other.digits_[i];
 
-      res.digits.push_back(diff % 10);
+      res.digits_.push_back(diff % 10);
 
       remain = diff / 10;
     }
@@ -51,17 +51,17 @@ class BigInt {
   BigInt operator-(const BigInt& other) const {
     BigInt res;
 
-    assert(digits.size() >= other.digits.size());
+    assert(digits_.size() >= other.digits_.size());
 
-    size_t max_len = std::max(digits.size(), other.digits.size());
+    size_t max_len = std::max(digits_.size(), other.digits_.size());
     int remain = 0;
 
     for (size_t i = 0; i < max_len || remain; i++) {
       int diff = remain;
 
-      if (i < digits.size()) diff += digits[i];
+      if (i < digits_.size()) diff += digits_[i];
 
-      if (i < other.digits.size()) diff -= other.digits[i];
+      if (i < other.digits_.size()) diff -= other.digits_[i];
 
       if (diff < 0) {
         diff += 10;
@@ -70,11 +70,11 @@ class BigInt {
         remain = 0;
       }
 
-      res.digits.push_back(diff);
+      res.digits_.push_back(diff);
     }
 
-    while (res.digits.size() > 1 && res.digits.back() == 0)
-      res.digits.pop_back();
+    while (res.digits_.size() > 1 && res.digits_.back() == 0)
+      res.digits_.pop_back();
 
     return res;
   }
@@ -82,18 +82,18 @@ class BigInt {
   BigInt operator*(const BigInt& other) const {
     BigInt res;
 
-    res.digits.resize(digits.size() + other.digits.size());
+    res.digits_.resize(digits_.size() + other.digits_.size());
 
-    for (size_t i = 0; i < digits.size(); i++) {
-      for (size_t j = 0; j < other.digits.size(); j++) {
-        res.digits[i + j] += digits[i] * other.digits[j];
-        res.digits[i + j + 1] += res.digits[i + j] / 10;
-        res.digits[i + j] %= 10;
+    for (size_t i = 0; i < digits_.size(); i++) {
+      for (size_t j = 0; j < other.digits_.size(); j++) {
+        res.digits_[i + j] += digits_[i] * other.digits_[j];
+        res.digits_[i + j + 1] += res.digits_[i + j] / 10;
+        res.digits_[i + j] %= 10;
       }
     }
 
-    while (res.digits.size() > 0 && res.digits.back() == 0)
-      res.digits.pop_back();
+    while (res.digits_.size() > 0 && res.digits_.back() == 0)
+      res.digits_.pop_back();
 
     return res;
   }
@@ -103,15 +103,15 @@ class BigInt {
 
     int64_t remain = 0;
 
-    for (int i = digits.size() - 1; i >= 0; i--) {
-      remain = remain * 10 + digits[i];
-      res.digits.push_back(remain / other);
+    for (int i = digits_.size() - 1; i >= 0; i--) {
+      remain = remain * 10 + digits_[i];
+      res.digits_.push_back(remain / other);
       remain %= other;
     }
 
-    std::reverse(res.digits.begin(), res.digits.end());
+    std::reverse(res.digits_.begin(), res.digits_.end());
 
-    if (res.digits.size() > 0 && res.digits.back() == 0) res.digits.pop_back();
+    if (res.digits_.size() > 0 && res.digits_.back() == 0) res.digits_.pop_back();
 
     return res;
   }
@@ -123,10 +123,10 @@ class BigInt {
   }
 
   bool operator==(const BigInt& other) {
-    if (digits.size() != other.digits.size()) return false;
+    if (digits_.size() != other.digits_.size()) return false;
 
-    for (size_t i = 0; i < digits.size(); i++) {
-      if (digits[i] != other.digits[i]) return false;
+    for (size_t i = 0; i < digits_.size(); i++) {
+      if (digits_[i] != other.digits_[i]) return false;
     }
 
     return true;
@@ -134,16 +134,22 @@ class BigInt {
 
   bool operator!=(const BigInt& other) { return !(*this == other); }
 
-  std::vector<int> digits;
+  const std::vector<int>& get_digits() const { return digits_; }
+
+private:
+  std::vector<int> digits_;
 };
 
 std::ostream& operator<<(std::ostream& out, const BigInt& number) {
-  if (number.digits.size() == 0) {
+
+  const std::vector<int>& digits = number.get_digits();
+
+  if (digits.size() == 0) {
     return out << '0';
   }
 
-  for (int i = number.digits.size() - 1; i >= 0; i--) {
-    out << static_cast<char>(number.digits[i] + '0');
+  for (int i = digits.size() - 1; i >= 0; i--) {
+    out << static_cast<char>(digits[i] + '0');
   }
 
   return out;
