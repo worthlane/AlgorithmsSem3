@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+//#include <stdarg.h>
 
 #define ll long long
 
@@ -24,11 +25,14 @@ class DSU {
 
   ll find_set(const ll self_id);
 
-  void unite_sets(const ll self_id, const ll other_id);
+  void unite_sets(const size_t amt, ...);
+  void unite_two_sets(const ll self_id, const ll other_id);
 
  private:
   std::vector<ll> parent_;
   std::vector<ll> size_;
+
+
 };
 
 std::vector<Edge> get_edges(const size_t cnt, bool have_weights = true);
@@ -39,7 +43,7 @@ void connect_vertexes(std::vector<Edge>& edges, std::vector<Edge>& permanent_con
 
   for (auto& edge : edges) {
     if (dsu.find_set(edge.start) != dsu.find_set(edge.end)) {
-      dsu.unite_sets(edge.start, edge.end);
+      dsu.unite_sets(2, edge.start, edge.end);
 
       for (auto& connection : permanent_connection) {
         if (dsu.find_set(connection.start) == dsu.find_set(connection.end) &&
@@ -99,7 +103,7 @@ ll DSU::find_set(const ll self_id) {
     return parent_[self_id] = find_set(parent_[self_id]);
 }
 
-void DSU::unite_sets(const ll self_id, const ll other_id) {
+void DSU::unite_two_sets(const ll self_id, const ll other_id) {
   ll self_root  = find_set(self_id);
   ll other_root = find_set(other_id);
 
@@ -109,4 +113,19 @@ void DSU::unite_sets(const ll self_id, const ll other_id) {
     parent_[other_root] = self_root;
     size_[self_root] += size_[other_root];
   }
+}
+
+void DSU::unite_sets(const size_t amt, ...) {
+  va_list args;
+  va_start(args, amt);
+
+  ll self_id = va_arg(args, ll);
+
+  for (size_t i = 1; i < amt; i++) {
+    ll other_id = va_arg(args, ll);
+
+    unite_two_sets(self_id, other_id);
+  }
+
+  va_end(args);
 }
