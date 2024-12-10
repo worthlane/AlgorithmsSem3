@@ -15,7 +15,7 @@ struct Point {
 
 bool x_comparator(const Point& a, const Point& intercept) { return a.x < intercept.x; }
 
-int64_t x_lower_bound(std::vector<Point>& points, int x) {
+int64_t x_lower_bound(const std::vector<Point>& points, int x) {
   auto it =
       std::lower_bound(points.begin(), points.end(), Point{x, 0}, x_comparator);
   return it - points.begin() - 1;
@@ -113,6 +113,10 @@ class ConvexHullTrick {
 
 int64_t solve(const int64_t points_amount, const int64_t segments_amount) {
 
+  if (segments_amount == 0) {
+  return 0;
+  }
+
   std::vector<std::vector<int64_t>> dp(segments_amount + 1, std::vector<int64_t>(points_amount + 1, INF));
 
   for (int64_t i = 0; i <= segments_amount; i++) {
@@ -134,7 +138,7 @@ int64_t solve(const int64_t points_amount, const int64_t segments_amount) {
     }
   }
 
-  return segments_amount == 0 ? 0 : dp[segments_amount][points_amount];
+  return dp[segments_amount][points_amount];
 }
 
 int main() {
