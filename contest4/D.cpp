@@ -5,16 +5,16 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <cstdarg>
 
-#define ll long long
 
 struct Edge {
-  ll start;
-  ll end;
-  ll weight;
+  int64_t start;
+  int64_t end;
+  int64_t weight;
 };
 
-static const ll NO_CONNECTION = -1;
+static const int64_t NO_CONNECTION = -1;
 
 bool edge_comp(const Edge& self, const Edge& other) { return self.weight > other.weight; }
 
@@ -22,14 +22,14 @@ class DSU {
  public:
   DSU(const size_t cnt);
 
-  ll find_set(const ll self_id);
+  int64_t find_set(const int64_t self_id);
 
   void unite_sets(const size_t amt, ...);
-  void unite_two_sets(const ll self_id, const ll other_id);
+  void unite_two_sets(const int64_t self_id, const int64_t other_id);
 
  private:
-  std::vector<ll> parent_;
-  std::vector<ll> size_;
+  std::vector<int64_t> parent_;
+  std::vector<int64_t> size_;
 
 
 };
@@ -54,7 +54,7 @@ void connect_vertexes(const std::vector<Edge>& edges, std::vector<Edge>& permane
 }
 
 int main() {
-  ll N = 0, M = 0, K = 0;
+  int64_t N = 0, M = 0, K = 0;
 
   std::cin >> N >> M >> K;
 
@@ -75,7 +75,7 @@ std::vector<Edge> get_edges(const size_t cnt, bool have_weights) {
   std::vector<Edge> edges(cnt);
 
   for (size_t i = 0; i < cnt; i++) {
-    ll start = 0, end = 0, weight = NO_CONNECTION;
+    int64_t start = 0, end = 0, weight = NO_CONNECTION;
 
     std::cin >> start >> end;
 
@@ -95,16 +95,16 @@ DSU::DSU(const size_t cnt) : parent_(cnt), size_(cnt, 1) {
   }
 }
 
-ll DSU::find_set(const ll self_id) {
+int64_t DSU::find_set(const int64_t self_id) {
   if (self_id == parent_[self_id])
     return self_id;
   else
     return parent_[self_id] = find_set(parent_[self_id]);
 }
 
-void DSU::unite_two_sets(const ll self_id, const ll other_id) {
-  ll self_root  = find_set(self_id);
-  ll other_root = find_set(other_id);
+void DSU::unite_two_sets(const int64_t self_id, const int64_t other_id) {
+  int64_t self_root  = find_set(self_id);
+  int64_t other_root = find_set(other_id);
 
   if (self_root != other_root) {
     if (size_[self_root] < size_[other_root]) std::swap(self_root, other_root);
@@ -118,10 +118,10 @@ void DSU::unite_sets(const size_t amt, ...) {
   va_list args;
   va_start(args, amt);
 
-  ll self_id = va_arg(args, ll);
+  int64_t self_id = va_arg(args, int64_t);
 
   for (size_t i = 1; i < amt; i++) {
-    ll other_id = va_arg(args, ll);
+    int64_t other_id = va_arg(args, int64_t);
 
     unite_two_sets(self_id, other_id);
   }
