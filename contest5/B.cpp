@@ -8,7 +8,12 @@
 #include <set>
 #include <vector>
 
-static const int64_t INF = 1e19;
+static const int64_t INF = std::numeric_limits<int64_t>::max();
+
+template <typename target>
+using MinQueue = std::priority_queue<target, std::vector<target>, std::greater<target>>;
+
+using Node = size_t;
 
 struct Edge {
   int64_t to;
@@ -22,23 +27,79 @@ struct Vertex {
   bool operator>(const Vertex& other) const { return time > other.time; }
 };
 
-void count_infect_time(std::vector<std::vector<Edge>>& graph,
-                       std::vector<int64_t>& infected,
-                       std::vector<int64_t>& infected_time) {
-  std::priority_queue<Vertex, std::vector<Vertex>, std::greater<Vertex>> q;
+class Graph
+{
+public:
+  Graph(const size_t vertexes_amt, const size_t edges_amt) : vertexes_amt_(vertexes_amt), edges_amt_(edges_amt), graph_(vertexes_amt) {}
 
-  for (auto& v : infected) {
-    q.push({v, 0});
+  friend std::istream& operator>>(std::istream& in, Graph& graph) {
+    for (size_t i = 0; i < graph.edges_amt_; i++) {
+      int64_t start = 0, end = 0, weight = 0;
+      std::cin >> start >> end >> weight;
+
+      start--;
+      end--;
+
+      graph[start].push_back({end, weight});
+      graph[end].push_back({start, weight});
+    }
+    return in;
   }
 
-  while (!q.empty()) {
-    Vertex curr_pos = q.top();
-    q.pop();
+size_t get_vertexes_amt() const { return vertexes_amt_; }
+size_t get_edges_amt() const { return edges_amt_; }
+
+std::vector<Edge>& operator[](const size_t index) { return graph_[index]; }
+const std::vector<Edge>& operator[](const size_t index) const { return graph_[index]; }
+
+private:
+  std::vector<std::vector<Edge>> graph_;
+  size_t vertexes_amt_;
+  size_t edges_amt_;
+};
+
+class Solver {
+public:
+  Solver(const size_t viruses_amt, const size_t vertexes_amt) : viruses_amt_(viruses_amt), infected_(viruses_amt), infected_time_(vertexes_amt, INF)
+  {}
+
+  friend std::istream& operator>>(std::istream& in, Solver& solver) {
+    for (int64_t i = 0; i < solver.viruses_amt_; i++) {
+      Node index = 0;
+      std::cin >> index;
+      solver.infected_[i] = index - 1;
+    }
+
+    for (int64_t i = 0; i < solver.viruses_amt_; i++) {
+      solver.infected_time_[solver.infected_[i]] = 0;
+    }
+
+    return in;
+  }
+
+  void count_infect_time(const Graph& graph);
+  std::vector<int64_t> find_distances(const Graph& graph, const int64_t start);
+
+private:
+  size_t viruses_amt_;
+  std::vector<Node> infected_;
+  std::vector<uint64_t> infected_time_;
+};
+void Solver::count_infect_time(const Graph& graph) {
+  MinQueue<Vertex> queue;
+
+  for (auto& v : infected_) {
+    queue.push({static_cast<int64_t>(v), 0});
+  }
+
+  while (!queue.empty()) {
+    Vertex curr_pos = queue.top();
+    queue.pop();
 
     int64_t curr_time = curr_pos.time;
     int64_t curr_id = curr_pos.id;
 
-    if (curr_time > infected_time[curr_id]) continue;
+    if (curr_time > infected_time_[curr_id]) continue;
 
     for (auto& edge : graph[curr_id]) {
       int64_t to = edge.to;
@@ -46,42 +107,41 @@ void count_infect_time(std::vector<std::vector<Edge>>& graph,
 
       int64_t time_after_pass = curr_time + weight;
 
-      if (time_after_pass < infected_time[to]) {
-        q.push({to, time_after_pass});
-        infected_time[to] = time_after_pass;
+      if (time_after_pass < infected_time_[to]) {
+        queue.push({to, time_after_pass});
+        infected_time_[to] = time_after_pass;
       }
     }
   }
 }
 
-std::vector<int64_t> deykstra(std::vector<std::vector<Edge>>& graph, const int64_t start,
-                             std::vector<int64_t>&infected_time) {
-// опирался на https://neerc.ifmo.ru/wiki/index.php?title=%D0%90%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC_%D0%94%D0%B5%D0%B9%D0%BA%D1%81%D1%82%D1%80%D1%8B
-  int64_t N = graph.size();
+std::vector<int64_t> Solver::find_distances(const Graph& graph, const int64_t start) {
+  // опирался на https://neerc.ifmo.ru/wiki/index.php?title=%D0%90%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC_%D0%94%D0%B5%D0%B9%D0%BA%D1%81%D1%82%D1%80%D1%8B
+  int64_t N = graph.get_vertexes_amt();
 
   std::vector<int64_t> dist(N, INF);
   dist[start] = 0;
 
-  std::priority_queue<Vertex, std::vector<Vertex>, std::greater<Vertex>> q;
-  q.push({start, 0});
+  MinQueue<Vertex> queue;
+  queue.push({start, 0});
 
-  while (!q.empty()) {
-    Vertex curr_pos = q.top();
-    q.pop();
+  while (!queue.empty()) {
+    Vertex curr_pos = queue.top();
+    queue.pop();
 
     int64_t curr_time = curr_pos.time;
     int64_t curr_id = curr_pos.id;
 
     if (curr_time > dist[curr_id]) continue;
 
-    for (auto& edge : graph[curr_id]) {
+    for (const auto& edge : graph[curr_id]) {
       int64_t to = edge.to;
       int64_t weight = edge.weight;
 
       int64_t time_after_pass = curr_time + weight;
 
-      if (time_after_pass < infected_time[to] && time_after_pass < dist[to]) {
-        q.push({to, time_after_pass});
+      if (time_after_pass < infected_time_[to] && time_after_pass < dist[to]) {
+        queue.push({to, time_after_pass});
         dist[to] = time_after_pass;
       }
     }
@@ -91,50 +151,29 @@ std::vector<int64_t> deykstra(std::vector<std::vector<Edge>>& graph, const int64
 }
 
 int main() {
-  int64_t N = 0, M = 0, K = 0;
+  int64_t vertexes_amt = 0, edges_amt = 0, viruses_amt = 0;
 
-  std::cin >> N >> M >> K;
+  std::cin >> vertexes_amt >> edges_amt >> viruses_amt;
 
-  std::vector<int64_t> infected(K);
+  Solver solver(viruses_amt, vertexes_amt);
+  std::cin >> solver;
 
-  for (int64_t i = 0; i < K; i++) {
-    int64_t v = 0;
-    std::cin >> v;
-    infected[i] = v - 1;
-  }
+  Graph graph(vertexes_amt, edges_amt);
+  std::cin >> graph;
 
-  std::vector<int64_t> infected_time(N, INF);
+  int64_t start = 0, target = 0;
+  std::cin >> start >> target;
+  start--;
+  target--;
 
-  for (int64_t i = 0; i < K; i++) {
-    infected_time[infected[i]] = 0;
-  }
+  solver.count_infect_time(graph);
 
-  std::vector<std::vector<Edge>> graph(N);
+  std::vector<int64_t> dist = solver.find_distances(graph, start);
 
-  for (size_t i = 0; i < M; i++) {
-    int64_t a = 0, b = 0, w = 0;
-    std::cin >> a >> b >> w;
-
-    a--;
-    b--;
-
-    graph[a].push_back({b, w});
-    graph[b].push_back({a, w});
-  }
-
-  int64_t s = 0, t = 0;
-  std::cin >> s >> t;
-  s--;
-  t--;
-
-  count_infect_time(graph, infected, infected_time);
-
-  std::vector<int64_t> dist = deykstra(graph, s, infected_time);
-
-  if (dist[t] == INF)
+  if (dist[target] == INF)
     std::cout << "-1\n";
   else
-    std::cout << dist[t] << std::endl;
+    std::cout << dist[target] << std::endl;
 
   return 0;
 }
